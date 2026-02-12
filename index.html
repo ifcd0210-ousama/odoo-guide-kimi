@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo Community Docker Guide | Coolify + ngrok</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="clay-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <span class="logo-icon">🐳</span>
+                <span>OdooDocker</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#docker">Docker</a></li>
+                <li><a href="#coolify">Coolify</a></li>
+                <li><a href="#ngrok">ngrok</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content clay-card hero-card">
+            <div class="hero-badge">📅 Updated February 12, 2026</div>
+            <h1>Deploy Odoo Community<br><span class="highlight">For Free</span></h1>
+            <p class="hero-subtitle">Build your own Docker image, self-host with Coolify, and expose to the internet using ngrok — 100% free, zero credit card required.</p>
+            <div class="tech-stack">
+                <span class="tech-badge clay-badge">🐳 Docker 27.x</span>
+                <span class="tech-badge clay-badge">⚡ Coolify v4</span>
+                <span class="tech-badge clay-badge">🌐 ngrok v3</span>
+                <span class="tech-badge clay-badge">🐍 Odoo 18.0</span>
+            </div>
+        </div>
+        <div class="hero-visual clay-blob">
+            <div class="floating-icons">
+                <span class="float-icon">📦</span>
+                <span class="float-icon">☁️</span>
+                <span class="float-icon">🔗</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Overview Section -->
+    <section id="overview" class="section">
+        <div class="container">
+            <h2 class="section-title">What We're Building</h2>
+            <div class="overview-grid">
+                <div class="overview-card clay-card">
+                    <div class="card-number clay-circle">1</div>
+                    <h3>Custom Docker Image</h3>
+                    <p>Build a lightweight Odoo Community image with your custom configurations, addons, and dependencies.</p>
+                </div>
+                <div class="overview-card clay-card">
+                    <div class="card-number clay-circle">2</div>
+                    <h3>Self-Hosted Deployment</h3>
+                    <p>Deploy on your own server using Coolify — the open-source Heroku alternative that's completely free.</p>
+                </div>
+                <div class="overview-card clay-card">
+                    <div class="card-number clay-circle">3</div>
+                    <h3>Public Access</h3>
+                    <p>Use ngrok to create a secure tunnel and expose your Odoo instance to the internet with a public URL.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Prerequisites Section -->
+    <section class="section section-alt">
+        <div class="container">
+            <h2 class="section-title">Prerequisites</h2>
+            <div class="prereq-container clay-card">
+                <div class="prereq-list">
+                    <div class="prereq-item">
+                        <span class="check clay-checkbox">✓</span>
+                        <div>
+                            <strong>Linux Server</strong>
+                            <p>Ubuntu 22.04/24.04 LTS, Debian 12, or any Linux VM (2GB RAM minimum, 4GB recommended)</p>
+                        </div>
+                    </div>
+                    <div class="prereq-item">
+                        <span class="check clay-checkbox">✓</span>
+                        <div>
+                            <strong>Docker & Docker Compose</strong>
+                            <p>Latest stable versions (we'll install these)</p>
+                        </div>
+                    </div>
+                    <div class="prereq-item">
+                        <span class="check clay-checkbox">✓</span>
+                        <div>
+                            <strong>Domain Name (Optional)</strong>
+                            <p>For custom domain with Coolify (or use the free subdomain)</p>
+                        </div>
+                    </div>
+                    <div class="prereq-item">
+                        <span class="check clay-checkbox">✓</span>
+                        <div>
+                            <strong>ngrok Account</strong>
+                            <p>Free tier at <a href="https://ngrok.com" target="_blank">ngrok.com</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 1: Docker Image -->
+    <section id="docker" class="section">
+        <div class="container">
+            <div class="step-header">
+                <span class="step-badge clay-badge">Step 1</span>
+                <h2 class="section-title">Create Your Odoo Docker Image</h2>
+            </div>
+            
+            <div class="step-content">
+                <div class="step-intro clay-card">
+                    <p>We'll create a custom Odoo 18.0 Community Docker image with a proper directory structure for addons and configuration. This approach keeps your custom code separate from the core Odoo installation.</p>
+                </div>
+
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">📁 Project Structure</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>odoo-docker/
+├── Dockerfile
+├── docker-compose.yml
+├── config/
+│   └── odoo.conf
+├── addons/
+│   └── .gitkeep
+└── entrypoint.sh</code></pre>
+                </div>
+
+                <h3 class="subsection-title">1.1 Create the Dockerfile</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">🐳 Dockerfile</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>FROM odoo:18.0
+
+USER root
+
+# Install additional system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libxml2-dev \
+    libxslt1-dev \
+    libevent-dev \
+    libsasl2-dev \
+    libldap2-dev \
+    libpq-dev \
+    libpng-dev \
+    libjpeg-dev \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create directories for custom addons and data
+RUN mkdir -p /mnt/extra-addons /var/lib/odoo/data /var/lib/odoo/sessions
+RUN chown -R odoo:odoo /mnt/extra-addons /var/lib/odoo
+
+# Copy custom configuration
+COPY config/odoo.conf /etc/odoo/odoo.conf
+RUN chown odoo:odoo /etc/odoo/odoo.conf
+
+# Copy entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+USER odoo
+
+# Expose Odoo services
+EXPOSE 8069 8071 8072
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["odoo"]</code></pre>
+                </div>
+
+                <h3 class="subsection-title">1.2 Create Odoo Configuration</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">⚙️ config/odoo.conf</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>[options]
+addons_path = /mnt/extra-addons
+data_dir = /var/lib/odoo
+; admin_passwd = admin
+; csv_internal_sep = ,
+; db_maxconn = 64
+; db_name = False
+; db_template = template0
+; dbfilter = .*
+; debug_mode = False
+; email_from = False
+; limit_memory_hard = 2684354560
+; limit_memory_soft = 2147483648
+; limit_request = 8192
+; limit_time_cpu = 60
+; limit_time_real = 120
+; list_db = True
+; log_db = False
+; log_handler = [':INFO']
+; log_level = info
+; logfile = None
+; longpolling_port = 8072
+; max_cron_threads = 2
+; osv_memory_age_limit = 1.0
+; osv_memory_count_limit = False
+; smtp_password = False
+; smtp_port = 25
+; smtp_server = localhost
+; smtp_ssl = False
+; smtp_user = False
+; workers = 0
+; xmlrpc = True
+; xmlrpc_interface = 
+; xmlrpc_port = 8069
+; xmlrpcs = True
+; xmlrpcs_interface = 
+; xmlrpcs_port = 8071</code></pre>
+                </div>
+
+                <h3 class="subsection-title">1.3 Create Entrypoint Script</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">🚀 entrypoint.sh</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>#!/bin/bash
+
+set -e
+
+# Wait for PostgreSQL to be ready
+if [ -n "$DB_HOST" ]; then
+    echo "Waiting for PostgreSQL at $DB_HOST:$DB_PORT..."
+    while ! nc -z $DB_HOST $DB_PORT; do
+        sleep 0.1
+    done
+    echo "PostgreSQL started"
+fi
+
+# Set default values
+: ${DB_HOST:=db}
+: ${DB_PORT:=5432}
+: ${DB_USER:=odoo}
+: ${DB_PASSWORD:=odoo}
+: ${DB_NAME:=postgres}
+
+# Update odoo.conf with environment variables
+if [ -f /etc/odoo/odoo.conf ]; then
+    sed -i "s/db_host = .*/db_host = $DB_HOST/" /etc/odoo/odoo.conf || echo "db_host = $DB_HOST" >> /etc/odoo/odoo.conf
+    sed -i "s/db_port = .*/db_port = $DB_PORT/" /etc/odoo/odoo.conf || echo "db_port = $DB_PORT" >> /etc/odoo/odoo.conf
+    sed -i "s/db_user = .*/db_user = $DB_USER/" /etc/odoo/odoo.conf || echo "db_user = $DB_USER" >> /etc/odoo/odoo.conf
+    sed -i "s/db_password = .*/db_password = $DB_PASSWORD/" /etc/odoo/odoo.conf || echo "db_password = $DB_PASSWORD" >> /etc/odoo/odoo.conf
+fi
+
+# Execute the original Odoo entrypoint
+exec "$@"</code></pre>
+                </div>
+
+                <h3 class="subsection-title">1.4 Create Docker Compose</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">📝 docker-compose.yml</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: odoo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+    networks:
+      - odoo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    build: .
+    container_name: odoo-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: odoo
+      DB_PASSWORD: odoo
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo
+    volumes:
+      - odoo-data:/var/lib/odoo
+      - ./addons:/mnt/extra-addons:rw
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    networks:
+      - odoo-network
+    command: ["odoo", "--config", "/etc/odoo/odoo.conf"]
+
+volumes:
+  odoo-db-data:
+  odoo-data:
+
+networks:
+  odoo-network:
+    driver: bridge</code></pre>
+                </div>
+
+                <h3 class="subsection-title">1.5 Build and Test Locally</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">💻 Terminal Commands</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># Navigate to project directory
+cd odoo-docker
+
+# Build the Docker image
+docker-compose build
+
+# Start services
+docker-compose up -d
+
+# Check logs
+docker-compose logs -f odoo
+
+# Access Odoo at http://localhost:8069
+# First startup may take 1-2 minutes</code></pre>
+                </div>
+
+                <div class="tip-box clay-tip">
+                    <span class="tip-icon">💡</span>
+                    <div>
+                        <strong>Pro Tip:</strong> The initial database creation can take a few minutes. Wait for the "odoo.modules.loading: Modules loaded" message in logs before accessing the UI.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 2: Coolify -->
+    <section id="coolify" class="section section-alt">
+        <div class="container">
+            <div class="step-header">
+                <span class="step-badge clay-badge">Step 2</span>
+                <h2 class="section-title">Deploy with Coolify</h2>
+            </div>
+
+            <div class="step-content">
+                <div class="step-intro clay-card">
+                    <p><a href="https://coolify.io" target="_blank">Coolify</a> is an open-source, self-hostable alternative to Heroku, Netlify, and Vercel. It supports Docker Compose, Git integrations, and provides a beautiful dashboard — all for free.</p>
+                </div>
+
+                <h3 class="subsection-title">2.1 Install Coolify on Your Server</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">🖥️ Server Setup (Ubuntu/Debian)</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install required packages
+sudo apt install -y curl wget git
+
+# Install Coolify (automatic installer)
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+
+# The installer will:
+# - Install Docker if not present
+# - Set up Coolify containers
+# - Generate initial credentials
+# - Display the dashboard URL</code></pre>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-card clay-card">
+                        <h4>🔐 Default Access</h4>
+                        <p>After installation, access Coolify at:</p>
+                        <code class="inline-code">http://your-server-ip:8000</code>
+                        <p>Initial credentials are displayed in the terminal after installation.</p>
+                    </div>
+                    <div class="info-card clay-card">
+                        <h4>🌐 Server Requirements</h4>
+                        <ul>
+                            <li>2 vCPU minimum</li>
+                            <li>4GB RAM recommended</li>
+                            <li>20GB disk space</li>
+                            <li>Ubuntu 22.04/24.04 or Debian 12</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">2.2 Configure Your Server in Coolify</h3>
+                <div class="steps-list">
+                    <div class="step-item clay-card">
+                        <span class="step-num clay-circle">1</span>
+                        <div>
+                            <strong>Log in to Coolify Dashboard</strong>
+                            <p>Navigate to your server's IP on port 8000 and log in with the credentials shown during installation.</p>
+                        </div>
+                    </div>
+                    <div class="step-item clay-card">
+                        <span class="step-num clay-circle">2</span>
+                        <div>
+                            <strong>Add Your Server</strong>
+                            <p>Go to <strong>Servers</strong> → <strong>Add Server</strong>. If deploying locally, use <code class="inline-code">localhost</code>.</p>
+                        </div>
+                    </div>
+                    <div class="step-item clay-card">
+                        <span class="step-num clay-circle">3</span>
+                        <div>
+                            <strong>Validate Server Connection</strong>
+                            <p>Click the validate button to ensure Coolify can connect and has proper Docker access.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="subsection-title">2.3 Create a New Project</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">📋 Application Configuration</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># In Coolify Dashboard:
+
+1. Click "New Project"
+2. Name: "odoo-community"
+3. Environment: "production"
+4. Click "Add Resource" → "Docker Compose"
+
+# Configuration:
+- Name: odoo
+- Build Pack: Docker Compose
+- Base Directory: /
+- Docker Compose Location: docker-compose.yml
+
+# Environment Variables (add these in the UI):
+DB_HOST=db
+DB_PORT=5432
+DB_USER=odoo
+DB_PASSWORD=your_secure_password_here
+DB_NAME=postgres
+
+# Domain Configuration:
+- Domain: your-domain.com or use Coolify's free subdomain
+- Port: 8069</code></pre>
+                </div>
+
+                <h3 class="subsection-title">2.4 Push to Git Repository (Recommended)</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">🔗 Git Setup</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># Initialize git repository
+cd odoo-docker
+git init
+
+# Create .gitignore
+cat > .gitignore << 'EOF'
+*.pyc
+__pycache__/
+*.log
+.DS_Store
+.env
+odoo-data/
+odoo-db-data/
+EOF
+
+# Add and commit
+git add .
+git commit -m "Initial Odoo Docker setup"
+
+# Add remote (GitHub, GitLab, or Gitea)
+git remote add origin https://github.com/yourusername/odoo-docker.git
+git push -u origin main
+
+# In Coolify: Add Resource → Git Repository → Select your repo</code></pre>
+                </div>
+
+                <h3 class="subsection-title">2.5 Deploy Your Application</h3>
+                <div class="steps-list">
+                    <div class="step-item clay-card">
+                        <span class="step-num clay-circle">1</span>
+                        <div>
+                            <strong>Configure Deployment</strong>
+                            <p>In your Coolify resource, set the deployment method to your Git repository or use the local build option.</p>
+                        </div>
+                    </div>
+                    <div class="step-item clay-card">
+                        <span class="step-num clay-circle">2</span>
+                        <div>
+                            <strong>Click Deploy</strong>
+                            <p>Coolify will build your Docker image and start the containers. Monitor the deployment logs in real-time.</p>
+                        </div>
+                    </div>
+                    <div class="step-item clay-card">
+                        <span class="step-num clay-circle">3</span>
+                        <div>
+                            <strong>Verify Deployment</strong>
+                            <p>Once deployed, click the domain link to access your Odoo instance.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tip-box clay-tip">
+                    <span class="tip-icon">💡</span>
+                    <div>
+                        <strong>Auto-Deploy:</strong> Enable webhook auto-deployment in Coolify to automatically redeploy when you push changes to your Git repository.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 3: ngrok -->
+    <section id="ngrok" class="section">
+        <div class="container">
+            <div class="step-header">
+                <span class="step-badge clay-badge">Step 3</span>
+                <h2 class="section-title">Expose with ngrok</h2>
+            </div>
+
+            <div class="step-content">
+                <div class="step-intro clay-card">
+                    <p><a href="https://ngrok.com" target="_blank">ngrok</a> creates secure tunnels to localhost, giving you a public URL for your local or self-hosted services. The free tier includes 1 static domain and up to 1GB/month data transfer.</p>
+                </div>
+
+                <h3 class="subsection-title">3.1 Install ngrok</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">📥 Installation</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># Download ngrok (Linux x64)
+curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/ngrok.gpg && \
+  echo "deb [signed-by=/etc/apt/keyrings/ngrok.gpg] https://ngrok-agent.s3.amazonaws.com buster main" | \
+  sudo tee /etc/apt/sources.list.d/ngrok.list && \
+  sudo apt update && sudo apt install ngrok
+
+# Or use the standalone binary
+wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+tar xvzf ngrok-v3-stable-linux-amd64.tgz
+sudo mv ngrok /usr/local/bin/</code></pre>
+                </div>
+
+                <h3 class="subsection-title">3.2 Configure ngrok</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">🔑 Authentication</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># Get your authtoken from https://dashboard.ngrok.com/get-started/your-authtoken
+# Then configure ngrok:
+
+ngrok config add-authtoken YOUR_AUTHTOKEN_HERE
+
+# Verify configuration
+ngrok config check</code></pre>
+                </div>
+
+                <h3 class="subsection-title">3.3 Start the Tunnel</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">🚀 Start Tunnel</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># Basic tunnel to local Odoo
+ngrok http 8069
+
+# With a static domain (free tier includes 1 static domain)
+ngrok http --domain=your-static-domain.ngrok-free.app 8069
+
+# If Odoo is on a different server, use the IP
+ngrok http http://your-server-ip:8069
+
+# For HTTPS backend
+ngrok http https://localhost:8069 --scheme http,https</code></pre>
+                </div>
+
+                <h3 class="subsection-title">3.4 Persistent ngrok with systemd</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">⚙️ Create Systemd Service</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># Create systemd service file
+sudo tee /etc/systemd/system/ngrok-odoo.service << 'EOF'
+[Unit]
+Description=ngrok tunnel for Odoo
+After=network.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/local/bin/ngrok http --domain=your-domain.ngrok-free.app 8069
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Reload systemd and enable service
+sudo systemctl daemon-reload
+sudo systemctl enable ngrok-odoo
+sudo systemctl start ngrok-odoo
+
+# Check status
+sudo systemctl status ngrok-odoo
+
+# View logs
+sudo journalctl -u ngrok-odoo -f</code></pre>
+                </div>
+
+                <h3 class="subsection-title">3.5 ngrok Configuration File</h3>
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">📄 ~/.config/ngrok/ngrok.yml</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code>version: "3"
+agent:
+  authtoken: YOUR_AUTHTOKEN
+  log_format: json
+  log_level: info
+
+tunnels:
+  odoo:
+    proto: http
+    addr: 8069
+    domain: your-static-domain.ngrok-free.app
+    schemes:
+      - https
+      - http
+    inspect: true
+    
+  odoo-tcp:
+    proto: tcp
+    addr: 8069
+    remote_addr: 1.tcp.ngrok.io:12345</code></pre>
+                </div>
+
+                <div class="code-block clay-code">
+                    <div class="code-header">
+                        <span class="code-title">🎮 Using the Config</span>
+                        <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code># Start specific tunnel from config
+ngrok start odoo
+
+# Start all tunnels
+ngrok start --all
+
+# List active tunnels
+ngrok tunnels list</code></pre>
+                </div>
+
+                <div class="warning-box clay-warning">
+                    <span class="warning-icon">⚠️</span>
+                    <div>
+                        <strong>Security Note:</strong> ngrok free tier URLs are public. Anyone with the URL can access your Odoo. Set a strong master password in Odoo and consider adding basic auth via ngrok or Coolify for additional security.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Complete Setup Script -->
+    <section class="section section-alt">
+        <div class="container">
+            <h2 class="section-title">Complete Setup Script</h2>
+            <div class="step-intro clay-card">
+                <p>Here's a complete one-liner script that sets up everything on a fresh Ubuntu server:</p>
+            </div>
+            <div class="code-block clay-code">
+                <div class="code-header">
+                    <span class="code-title">🚀 setup-odoo.sh</span>
+                    <button class="copy-btn clay-btn-small" onclick="copyCode(this)">Copy</button>
+                </div>
+                <pre><code>#!/bin/bash
+set -e
+
+echo "🚀 Odoo Community + Coolify + ngrok Setup Script"
+echo "================================================"
+
+# Update system
+echo "📦 Updating system..."
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+echo "🐳 Installing Docker..."
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+
+# Install Docker Compose
+echo "📝 Installing Docker Compose..."
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Install Coolify
+echo "❄️ Installing Coolify..."
+curl -fsSL https://cdn.coollabs.io/coolify/install.sh | bash
+
+# Install ngrok
+echo "🌐 Installing ngrok..."
+curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/ngrok.gpg && \
+  echo "deb [signed-by=/etc/apt/keyrings/ngrok.gpg] https://ngrok-agent.s3.amazonaws.com buster main" | \
+  sudo tee /etc/apt/sources.list.d/ngrok.list && \
+  sudo apt update && sudo apt install ngrok -y
+
+echo ""
+echo "✅ Installation Complete!"
+echo ""
+echo "Next steps:"
+echo "1. Log out and log back in for Docker group changes"
+echo "2. Configure ngrok: ngrok config add-authtoken YOUR_TOKEN"
+echo "3. Access Coolify at http://$(hostname -I | awk '{print $1}'):8000"
+echo "4. Clone your Odoo Docker project and deploy"
+echo ""
+echo "🎉 Happy deploying!"</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Summary -->
+    <section class="section">
+        <div class="container">
+            <h2 class="section-title">Summary & Next Steps</h2>
+            <div class="summary-grid">
+                <div class="summary-card clay-card">
+                    <h3>🎯 What You Built</h3>
+                    <ul>
+                        <li>Custom Odoo 18.0 Community Docker image</li>
+                        <li>Self-hosted deployment with Coolify</li>
+                        <li>Public access via ngrok tunnel</li>
+                        <li>Zero-cost infrastructure stack</li>
+                    </ul>
+                </div>
+                <div class="summary-card clay-card">
+                    <h3>🚀 What's Next</h3>
+                    <ul>
+                        <li>Install Odoo apps and configure your database</li>
+                        <li>Set up automated backups with Coolify</li>
+                        <li>Configure SSL with Let's Encrypt</li>
+                        <li>Add monitoring and alerts</li>
+                    </ul>
+                </div>
+                <div class="summary-card clay-card">
+                    <h3>📚 Resources</h3>
+                    <ul>
+                        <li><a href="https://www.odoo.com/documentation/18.0/" target="_blank">Odoo 18 Documentation</a></li>
+                        <li><a href="https://coolify.io/docs/" target="_blank">Coolify Docs</a></li>
+                        <li><a href="https://ngrok.com/docs" target="_blank">ngrok Documentation</a></li>
+                        <li><a href="https://docs.docker.com/" target="_blank">Docker Documentation</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>Built with ❤️ using pure HTML, CSS & JS | Claymorphism UI Design</p>
+            <p class="footer-date">Last updated: February 12, 2026</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast clay-toast">
+        <span class="toast-icon">✓</span>
+        <span class="toast-message">Copied to clipboard!</span>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
